@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ACHOUAK's STREAMZ · Scan to Watch</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffab40'/%3E%3Cstop offset='1' stop-color='%23ff5722'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='3' y='3' width='42' height='42' rx='12' fill='url(%23g)'/%3E%3Cpath d='M17 15 17 33 30 24Z' fill='%230a0c0f'/%3E%3Cg fill='none' stroke='%230a0c0f' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M34 19a7 7 0 0 1 0 10'/%3E%3Cpath d='M38 15a13 13 0 0 1 0 18'/%3E%3C/g%3E%3Ccircle cx='40' cy='9' r='4' fill='%23ff3b30'/%3E%3C/svg%3E" />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{--ink:#070809;--amber:#ffab40;--ember:#ff5722;--signal:#ff3b30;--txt:#eef1f4;--mut:#8a93a0;--mut2:#5f6772;--line:#23282f;
+    --disp:'Bricolage Grotesque',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;}
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%}
+  body{background:var(--ink);color:var(--txt);font-family:var(--mono);
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:28px;position:relative;overflow:hidden}
+  body::before{content:"";position:fixed;inset:0;background:
+    radial-gradient(800px 480px at 80% -10%,rgba(255,87,34,.18),transparent 60%),
+    radial-gradient(680px 420px at 15% 110%,rgba(255,171,64,.10),transparent 55%);}
+  .card{position:relative;z-index:2;width:min(420px,100%);background:linear-gradient(180deg,#13161b,#0b0d10);
+    border:1px solid var(--line);border-radius:28px;padding:38px 34px 30px;text-align:center;
+    box-shadow:0 40px 100px -30px rgba(255,87,34,.4),inset 0 1px 0 rgba(255,255,255,.05)}
+  .brand{display:flex;align-items:center;justify-content:center;gap:13px;margin-bottom:6px}
+  .mark{position:relative;width:52px;height:52px;flex:none;filter:drop-shadow(0 6px 16px rgba(255,87,34,.5))}
+  .mark .live{position:absolute;top:-1px;right:-1px;width:12px;height:12px;border-radius:50%;background:var(--signal);border:2px solid var(--ink);
+    box-shadow:0 0 0 0 rgba(255,59,48,.6);animation:p 1.8s infinite}
+  @keyframes p{0%{box-shadow:0 0 0 0 rgba(255,59,48,.55)}70%{box-shadow:0 0 0 8px rgba(255,59,48,0)}100%{box-shadow:0 0 0 0 rgba(255,59,48,0)}}
+  .wm{font-family:var(--disp);font-weight:800;font-size:23px;letter-spacing:-.4px;text-align:left;line-height:1;
+    background:linear-gradient(92deg,#fff 10%,var(--amber) 60%,var(--ember));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:9.5px;letter-spacing:2.5px;color:var(--mut2);text-transform:uppercase;margin-top:5px}
+  .scan{font-family:var(--disp);font-weight:700;font-size:15px;color:var(--txt);margin:26px 0 16px;letter-spacing:.2px}
+  .scan b{color:var(--amber)}
+  .qbox{background:#fff;border-radius:20px;padding:18px;display:inline-block;line-height:0;box-shadow:0 16px 40px -16px rgba(0,0,0,.7)}
+  .qbox img{width:230px;height:230px;display:block}
+  .url{margin-top:20px;font-size:11.5px;color:var(--mut);word-break:break-all;letter-spacing:.3px}
+  .url a{color:var(--amber);text-decoration:none}
+  .by{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mut2)}
+  .by b{font-family:var(--disp);font-weight:800;font-size:13px;letter-spacing:0;text-transform:none;
+    background:linear-gradient(92deg,var(--amber),var(--ember));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hint{margin-top:14px;font-size:10px;color:var(--mut2);letter-spacing:.5px}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <div class="mark">
+        <svg viewBox="0 0 48 48" width="52" height="52" role="img" aria-label="logo">
+          <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffab40"/><stop offset="1" stop-color="#ff5722"/></linearGradient></defs>
+          <rect x="3" y="3" width="42" height="42" rx="12" fill="url(#lg)"/>
+          <path d="M17 15 17 33 30 24Z" fill="#0a0c0f"/>
+          <g fill="none" stroke="#0a0c0f" stroke-width="2.6" stroke-linecap="round"><path d="M34 19a7 7 0 0 1 0 10"/><path d="M38 15a13 13 0 0 1 0 18"/></g>
+        </svg>
+        <span class="live"></span>
+      </div>
+      <div>
+        <div class="wm">ACHOUAK's STREAMZ</div>
+        <div class="sub">Global Live TV Network</div>
+      </div>
+    </div>
+    <div class="scan">📡 Scan to watch <b>10,000+ live channels</b> — free</div>
+    <div class="qbox"><img src="qr.png" alt="QR code to ACHOUAK's STREAMZ" /></div>
+    <div class="hint">Point your phone camera at the code</div>
+    <div class="url"><a href="https://daphoenix2000.github.io/achouak-streamz/">daphoenix2000.github.io/achouak-streamz</a></div>
+    <div class="by">Built &amp; designed by <b>Yassine Achouak</b></div>
+  </div>
+</body>
+</html>
