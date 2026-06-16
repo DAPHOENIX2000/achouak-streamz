@@ -272,7 +272,7 @@
     <h3 data-i18n="quality">Quality</h3>
     <div class="field"><select id="quality"><option value="">Any quality</option></select></div>
     <h3 data-i18n="provider">Source</h3>
-    <div class="field"><select id="provider"><option value="">All sources</option><option value="iptv-org">iptv-org</option><option value="Free-TV">Free-TV</option></select></div>
+    <div class="field"><select id="provider"><option value="">All sources</option></select></div>
     <label class="toggle"><input type="checkbox" id="nsfw" /> <span data-i18n="adult">Show adult (18+) channels</span></label>
     <button class="reset" id="reset" data-i18n="reset">↺ Reset filters</button>
   </aside>
@@ -328,7 +328,11 @@
 
 <script>
 const API='https://iptv-org.github.io/api';
-const FREETV='https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8';
+// Extra browser-fetchable (CORS-open) legal free-to-air M3U playlists, merged on top of iptv-org
+const M3U_SOURCES=[
+  {url:'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8',provider:'Free-TV'},
+  {url:'https://raw.githubusercontent.com/freecasthub/public-iptv/main/playlist.m3u',provider:'Public TV'}
+];
 const $=s=>document.querySelector(s);
 let GROUPS=[],FILTERED=[],shown=0,CHUNK=60;
 
@@ -439,14 +443,24 @@ function parseM3U(text){
   return out;
 }
 
+async function fetchJSON(u,tries=4,timeout=30000){
+  let last;
+  for(let i=0;i<tries;i++){
+    const ctl=new AbortController();const tid=setTimeout(()=>ctl.abort(),timeout);
+    try{const r=await fetch(u,{signal:ctl.signal});if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();clearTimeout(tid);return j;}
+    catch(e){clearTimeout(tid);last=e;await new Promise(r=>setTimeout(r,700*(i+1)));}
+  }
+  throw last;
+}
+
 async function boot(){
   try{
     const [streams,channels,logos,cats,countries]=await Promise.all([
-      fetch(API+'/streams.json').then(r=>r.json()),
-      fetch(API+'/channels.json').then(r=>r.json()),
-      fetch(API+'/logos.json').then(r=>r.json()),
-      fetch(API+'/categories.json').then(r=>r.json()),
-      fetch(API+'/countries.json').then(r=>r.json()),
+      fetchJSON(API+'/streams.json'),
+      fetchJSON(API+'/channels.json'),
+      fetchJSON(API+'/logos.json'),
+      fetchJSON(API+'/categories.json'),
+      fetchJSON(API+'/countries.json'),
     ]);
     const chMap=new Map(channels.map(c=>[c.id,c]));
     const logoMap=new Map();
@@ -477,23 +491,33 @@ async function boot(){
       grp.sources.push({url:s.url,quality:s.quality||'',label:s.label||''});
     }
 
-    // merge Free-TV playlist (non-fatal if it fails)
-    try{
-      const ftvTxt=await fetch(FREETV).then(r=>{if(!r.ok)throw 0;return r.text();});
-      for(const e of parseM3U(ftvTxt)){
-        if(!e.url)continue;
-        const key='ftv:'+(e.id||e.name||e.url);
-        if(g.has(key)){g.get(key).sources.push({url:e.url,quality:'',label:''});continue;}
-        const code=nameToCode.get((e.group||'').toLowerCase())||'';
-        const country=code?ctyMap.get(code):null;
-        g.set(key,{
-          id:key,name:e.name||'Unknown channel',logo:e.logo||null,
-          countryCode:code,country:country?country.name:(e.group||''),flag:country?country.flag:'🌐',
-          cats:[],catIds:[],nsfw:false,provider:'Free-TV',
-          sources:[{url:e.url,quality:'',label:''}]
-        });
-      }
-    }catch(err){console.warn('Free-TV playlist unavailable:',err);}
+    // dedup set of stream URLs already known (from iptv-org)
+    const seen=new Set();
+    for(const grp of g.values())for(const s of grp.sources)seen.add(s.url);
+
+    // merge extra M3U playlists in order (each non-fatal; duplicate URLs skipped)
+    for(const SRC of M3U_SOURCES){
+      try{
+        const txt=await fetch(SRC.url).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text();});
+        let n=0;
+        for(const e of parseM3U(txt)){
+          if(!e.url||seen.has(e.url))continue;
+          seen.add(e.url);
+          const key=SRC.provider+':'+(e.id||e.name||e.url);
+          if(g.has(key)){g.get(key).sources.push({url:e.url,quality:'',label:''});continue;}
+          const code=nameToCode.get((e.group||'').toLowerCase())||'';
+          const country=code?ctyMap.get(code):null;
+          g.set(key,{
+            id:key,name:e.name||'Unknown channel',logo:e.logo||null,
+            countryCode:code,country:country?country.name:(e.group||''),flag:country?country.flag:'🌐',
+            cats:[],catIds:[],nsfw:false,provider:SRC.provider,
+            sources:[{url:e.url,quality:'',label:''}]
+          });
+          n++;
+        }
+        console.log('Loaded',n,'channels from',SRC.provider);
+      }catch(err){console.warn(SRC.provider+' playlist unavailable:',err);}
+    }
 
     GROUPS=[...g.values()].sort((a,b)=>a.name.localeCompare(b.name));
 
@@ -509,6 +533,8 @@ async function boot(){
     const quals=[...new Set(GROUPS.flatMap(x=>x.sources.map(s=>s.quality)).filter(Boolean))]
       .sort((a,b)=>parseInt(b)-parseInt(a));
     els.quality.innerHTML=`<option value="">${esc(t('any_quality'))}</option>`+quals.map(q=>`<option>${q}</option>`).join('');
+    const provs=[...new Set(GROUPS.map(x=>x.provider))].sort((a,b)=>a==='iptv-org'?-1:b==='iptv-org'?1:a.localeCompare(b));
+    els.provider.innerHTML=`<option value="">${esc(t('all_sources'))}</option>`+provs.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
     const quick=['news','sports','movies','entertainment','music','kids','documentary','general'];
     els.catChips.innerHTML=quick.filter(q=>catMap.has(q)).map(q=>`<div class="chip" data-cat="${q}">${esc(t('qc_'+q))}</div>`).join('');
     els.catChips.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{
@@ -561,7 +587,7 @@ function render(){
       <div class="meta">
         <div class="nm">${esc(g.name)}</div>
         <div class="sub">${g.flag||'📺'} ${esc(g.country||'—')}${g.cats[0]?' · '+esc(g.cats[0]):''}</div>
-        ${g.provider==='Free-TV'?`<span class="prov">Free-TV</span>`:''}
+        ${g.provider&&g.provider!=='iptv-org'?`<span class="prov">${esc(g.provider)}</span>`:''}
       </div>`;
     card.onclick=()=>openPlayer(g);
     frag.appendChild(card);
